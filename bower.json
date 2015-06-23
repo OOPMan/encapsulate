@@ -1,0 +1,27 @@
+{
+  "name": "classy",
+  "version": "0.0.1",
+  "homepage": "https://github.com/OOPMan/classy",
+  "authors": [
+    "Adam Jorgensen <adam.jorgensen.za@gmail.com>"
+  ],
+  "description": "A JavaScript class system",
+  "main": "src/classy.js",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "classes",
+    "utility"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
