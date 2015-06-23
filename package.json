@@ -1,0 +1,33 @@
+{
+  "name": "classy",
+  "version": "0.0.1",
+  "description": "A JavaScript class system",
+  "main": "src/classy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OOPMan/classy.git"
+  },
+  "keywords": [
+    "classes",
+    "utility"
+  ],
+  "author": "Adam Jorgensen <adam.jorgensen.za@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OOPMan/classy/issues"
+  },
+  "homepage": "https://github.com/OOPMan/classy#readme",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "lodash": "^3.9.3"
+  },
+  "devDependencies": {
+    "bower": "^1.4.1",
+    "unit.js": ">=1.0.2",
+    "mocha": ">=2.0.0",
+    "jsdom": ">=1.0.0"
+  }
+}
