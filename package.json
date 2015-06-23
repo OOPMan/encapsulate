@@ -1,14 +1,14 @@
 {
-  "name": "classy",
+  "name": "encapsulate",
   "version": "0.0.1",
   "description": "A JavaScript class system",
-  "main": "src/classy.js",
+  "main": "src/encapsulate.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OOPMan/classy.git"
+    "url": "git+https://github.com/OOPMan/encapsulate.git"
   },
   "keywords": [
     "classes",
@@ -17,9 +17,9 @@
   "author": "Adam Jorgensen <adam.jorgensen.za@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/OOPMan/classy/issues"
+    "url": "https://github.com/OOPMan/encapsulate/issues"
   },
-  "homepage": "https://github.com/OOPMan/classy#readme",
+  "homepage": "https://github.com/OOPMan/encapsulate#readme",
   "readmeFilename": "README.md",
   "dependencies": {
     "lodash": "^3.9.3"

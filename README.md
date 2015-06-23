@@ -1,2 +1,2 @@
-# classy
+# encapsulate
 A JavaScript class system

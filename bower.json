@@ -1,12 +1,12 @@
 {
-  "name": "classy",
+  "name": "encapsulate",
   "version": "0.0.1",
-  "homepage": "https://github.com/OOPMan/classy",
+  "homepage": "https://github.com/OOPMan/encapsulate",
   "authors": [
     "Adam Jorgensen <adam.jorgensen.za@gmail.com>"
   ],
   "description": "A JavaScript class system",
-  "main": "src/classy.js",
+  "main": "src/encapsulate.js",
   "moduleType": [
     "amd",
     "globals",
