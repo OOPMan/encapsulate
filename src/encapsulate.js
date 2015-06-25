@@ -49,6 +49,7 @@
                     instanceOf: {
                         value: function (target) {
                             //TODO: Implement instanceOf check to determine of instance is an instance of target or one of its bases
+                            throw "NotImplemented";
                         }
                     }
                 });
