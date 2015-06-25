@@ -15,7 +15,7 @@
     } else {
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
-        root.encapsulate = factory(_.assign);
+        root.encapsulate = factory(_.assign, _.map, _.forEach, _.slice);
     }
 }(this, function (assign, map, forEach, slice) {
     /**
@@ -37,6 +37,7 @@
                 var args = slice(arguments),
                     instance = function () {
                         //TODO: Handle mixins return a new instance of the object with input mixins applied
+                        throw "NotImplemented";
                     };
                 Object.defineProperties(instance, {
                     isEncapsulateInstance: {
@@ -58,8 +59,9 @@
             },
             extends: {
                 value: function (parentInstantiator) {
-                    //TODO: Implement extends
                     if (!parentInstantiator.isEncapsulateInstantiator) throw "parentInstantiator needs to be an Encapsulate Instantiator";
+                    //TODO: Implement extends
+                    throw "NotImplemented";
                 }
             }
         });
@@ -73,12 +75,22 @@
      * @returns {Function}
      */
     function encapsulate(membersOrMembersGeneratorOrInstantiator) {
-        var args = slice(arguments);
+        var args = slice(arguments),
+            parentAccumulator = function (membersOrMembersGeneratorOrInstantiator) {
+                if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
+                    args.push.apply(args, arguments);
+                    return parentAccumulator;
+                } else {
+                    var instantiator = encapsulate.apply(this, arguments);
+                    return instantiator.extends.apply(instantiator, args);
+                }
+            };
+
         if (typeof membersOrMembersGeneratorOrInstantiator == "undefined") throw "encapsulate requires parameters!";
 
         if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
-            //TODO: Handle pre-extends scenario in which all arguments are instantiators to inherit from
-        } else return generateInstantiator.apply(this, map(arguments, function (argument) {
+            return parentAccumulator;
+        } else return generateInstantiator.apply(this, map(args, function (argument) {
             if (typeof argument == "function" && !argument.isEncapsulateInstantiator) return argument;
             else if (typeof argument == "object") return function () {
                 return assign({}, argument);
