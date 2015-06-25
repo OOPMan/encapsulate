@@ -1,12 +1,15 @@
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(["lodash/object/assign", "lodash/collection/map", "lodash/collection/forEach", "lodash/array/slice"], factory);
+        define(
+            ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map", "lodash/collection/forEach", "lodash/array/slice"],
+            factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
         // only CommonJS-like environments that support module.exports,
         // like Node.
         module.exports = factory(
+            require("lodash/lang/clone"),
             require("lodash/object/assign"),
             require("lodash/collection/map"),
             require("lodash/collection/forEach"),
@@ -15,9 +18,9 @@
     } else {
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
-        root.encapsulate = factory(_.assign, _.map, _.forEach, _.slice);
+        root.encapsulate = factory(_.clone, _.assign, _.map, _.forEach, _.slice);
     }
-}(this, function (assign, map, forEach, slice) {
+}(this, function (clone, assign, map, forEach, slice) {
     /**
      *
      * @param membersGenerator
@@ -93,7 +96,7 @@
         } else return generateInstantiator.apply(this, map(args, function (argument) {
             if (typeof argument == "function" && !argument.isEncapsulateInstantiator) return argument;
             else if (typeof argument == "object") return function () {
-                return assign({}, argument);
+                return clone(argument, true);
             };
             throw "Unsupported argument type";
         }));
