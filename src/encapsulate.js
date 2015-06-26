@@ -79,16 +79,17 @@
      * @returns {Function}
      */
     function encapsulate(membersOrMembersGeneratorOrInstantiator) {
-        var args = slice(arguments),
-            parentAccumulator = function (membersOrMembersGeneratorOrInstantiator) {
-                if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
-                    args.push.apply(args, arguments);
-                    return parentAccumulator;
-                } else {
-                    var instantiator = encapsulate.apply(this, arguments);
-                    return instantiator.extends.apply(instantiator, args);
-                }
-            };
+        var args = slice(arguments);
+
+        function parentAccumulator(membersOrMembersGeneratorOrInstantiator) {
+            if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
+                args.push.apply(args, arguments);
+                return parentAccumulator;
+            } else {
+                var instantiator = encapsulate.apply(this, arguments);
+                return instantiator.extends.apply(instantiator, args);
+            }
+        }
 
         if (typeof membersOrMembersGeneratorOrInstantiator == "undefined") throw "encapsulate requires parameters!";
 
