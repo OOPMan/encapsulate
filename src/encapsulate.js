@@ -32,10 +32,12 @@
 
     /**
      *
+     * @param {Array} memberGenerators
+     * @param {Array} [bases=[]]
      * @returns {Function}
      */
-    function generateInstantiator() {
-        var generateInstantiatorArguments = arguments,
+    function generateInstantiator(memberGenerators, bases) {
+        var bases = bases || [],
             instantiator = function () {
                 var args = slice(arguments),
                     instance = function () {
@@ -53,19 +55,26 @@
                         }
                     }
                 });
-                forEach(generateInstantiatorArguments, bindMembers, instance);
-                if(typeof instance.constructor == "function") instance.constructor.apply(instance, arguments);
+                forEach(memberGenerators, bindMembers, instance);
+                if(typeof instance.__init__ == "function") instance.__init__.apply(instance, arguments);
                 return instance;
         };
+
         Object.defineProperties(instantiator, {
+            __bases__: {
+                get: function () {
+                    return slice(bases);
+                }
+            },
             isEncapsulateInstantiator: {
                 value: true
             },
             extends: {
-                value: function (parentInstantiator) {
-                    if (!parentInstantiator.isEncapsulateInstantiator) throw "parentInstantiator needs to be an Encapsulate Instantiator";
-                    //TODO: Implement extends
-                    throw "NotImplemented";
+                value: function () {
+                    forEach(arguments, function (base) {
+                        if (!base.isEncapsulateInstantiator) throw base + " is not an Encapsulate Instantiator";
+                    });
+                    return generateInstantiator(memberGenerators, arguments);
                 }
             }
         });
@@ -79,7 +88,7 @@
      * @returns {Function}
      */
     function encapsulate(membersOrMembersGeneratorOrInstantiator) {
-        var args = slice(arguments);
+        var args = arguments;
 
         function parentAccumulator(membersOrMembersGeneratorOrInstantiator) {
             if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
@@ -95,7 +104,7 @@
 
         if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
             return parentAccumulator;
-        } else return generateInstantiator.apply(this, map(args, function (argument) {
+        } else return generateInstantiator(map(args, function (argument) {
             if (typeof argument == "function" && !argument.isEncapsulateInstantiator) return argument;
             else if (typeof argument == "object") return function () {
                 return clone(argument, true);
