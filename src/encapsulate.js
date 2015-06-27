@@ -2,7 +2,8 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(
-            ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map", "lodash/collection/forEach", "lodash/array/slice"],
+            ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map", "lodash/collection/forEach",
+             "lodash/array/slice"],
             factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
@@ -21,6 +22,8 @@
         root.encapsulate = factory(_.clone, _.assign, _.map, _.forEach, _.slice);
     }
 }(this, function (clone, assign, map, forEach, slice) {
+    var instantiatorCount = 0,
+        instanceCount = 0;
     /**
      *
      * @param membersGenerator
@@ -45,6 +48,9 @@
                         throw "NotImplemented";
                     };
                 Object.defineProperties(instance, {
+                    __id__: {
+                        value: "encapsulateInstance" + instanceCount++
+                    },
                     isEncapsulateInstance: {
                         value: true
                     },
@@ -55,15 +61,26 @@
                         }
                     }
                 });
+                //TODO: Replace naive bind members with inheritance aware form
                 forEach(memberGenerators, bindMembers, instance);
                 if(typeof instance.__init__ == "function") instance.__init__.apply(instance, arguments);
                 return instance;
         };
 
+        //TODO: Use C3 Linearization to determine MRO
+
         Object.defineProperties(instantiator, {
+            __id__: {
+                value: "encapsulateInstantiator" + instantiatorCount++
+            },
             __bases__: {
                 get: function () {
                     return slice(bases);
+                }
+            },
+            __members__: {
+                get: function () {
+                    return slice(memberGenerators);
                 }
             },
             isEncapsulateInstantiator: {
@@ -79,7 +96,6 @@
             }
         });
         return instantiator;
-
     }
 
     /**
