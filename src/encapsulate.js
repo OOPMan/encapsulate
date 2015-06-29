@@ -3,7 +3,8 @@
         // AMD. Register as an anonymous module.
         define(
             ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map", "lodash/collection/forEach",
-             "lodash/array/slice"],
+             "lodash/collection/includes", "lodash/collection/reduce", "lodash/collection/reject", "lodash/array/slice",
+             "lodash/array/first", "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
             factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
@@ -14,16 +15,68 @@
             require("lodash/object/assign"),
             require("lodash/collection/map"),
             require("lodash/collection/forEach"),
-            require("lodash/array/slice")
+            require("lodash/collection/includes"),
+            require("lodash/collection/reduce"),
+            require("lodash/collection/reject"),
+            require("lodash/array/slice"),
+            require("lodash/array/first"),
+            require("lodash/array/rest"),
+            require("lodash/array/without"),
+            require("lodash/array/flatten")
         );
     } else {
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
-        root.encapsulate = factory(_.clone, _.assign, _.map, _.forEach, _.slice);
+        root.encapsulate = factory(
+            _.clone, _.assign, _.map, _.forEach, _.includes, _.reduce, _.reject, _.slice, _.first, _.rest, _.without, _.flatten
+        );
     }
-}(this, function (clone, assign, map, forEach, slice) {
+}(this, function (clone, assign, map, forEach, includes, reduce, reject, slice, first, rest, without, flatten) {
     var instantiatorCount = 0,
         instanceCount = 0;
+
+    /**
+     *
+     * @param {*} value
+     * @param {Array[Array]} lists
+     * @returns {Array[Array]}
+     */
+    function remove(value, lists) {
+        return reject(
+            map(lists, function (list) {
+                return without(list, value);
+            }),
+            {
+                length: 0
+            });
+    }
+
+    function headNotInTails() {
+        var heads = map(arguments, first),
+            tails = flatten(map(arguments, rest));
+        return reduce(heads, function (selectedHead, head) {
+            if (selectedHead !== null) return selectedHead;
+            if (includes(tails, head)) return null;
+            return head;
+        }, null);
+    }
+
+    function merge() {
+        var args = slice(arguments),
+            head = headNotInTails.apply(this, args),
+            filteredArgs = head ? remove(head, args) : null;
+        if (head) {
+            if (filteredArgs.length == 0) return [head];
+            return [head].concat(merge.apply(this, filteredArgs));
+        }
+        throw "No linearization possible";
+    }
+
+    function linearize(instantiator) {
+        if (instantiator.__bases__.length == 0) return [instantiator];
+        return [instantiator].concat(merge.apply(this, map(instantiator.__bases__, linearize).concat([instantiator.__bases__])));
+    }
+
     /**
      *
      * @param membersGenerator
@@ -67,8 +120,6 @@
                 return instance;
         };
 
-        //TODO: Use C3 Linearization to determine MRO
-
         Object.defineProperties(instantiator, {
             __id__: {
                 value: "encapsulateInstantiator" + instantiatorCount++
@@ -88,12 +139,16 @@
             },
             extends: {
                 value: function () {
-                    forEach(arguments, function (base) {
+                    var args = slice(arguments);
+                    forEach(args, function (base) {
                         if (!base.isEncapsulateInstantiator) throw base + " is not an Encapsulate Instantiator";
                     });
-                    return generateInstantiator(memberGenerators, arguments);
+                    return generateInstantiator(memberGenerators, args);
                 }
             }
+        });
+        Object.defineProperty(instantiator, "__mro__", {
+            value: linearize(instantiator)
         });
         return instantiator;
     }
@@ -104,9 +159,10 @@
      * @returns {Function}
      */
     function encapsulate(membersOrMembersGeneratorOrInstantiator) {
-        var args = arguments;
+        var args = slice(arguments);
 
         function parentAccumulator(membersOrMembersGeneratorOrInstantiator) {
+            var arguments = slice(arguments);
             if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
                 args.push.apply(args, arguments);
                 return parentAccumulator;
