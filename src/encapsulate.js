@@ -184,7 +184,43 @@
             throw "Unsupported argument type";
         }));
     }
-
+    Object.defineProperties(encapsulate, {
+        namespace: {
+            value: function (name, membersGenerator) {
+                function namespacedMembersGenerator() {
+                    return membersGenerator();
+                }
+                Object.defineProperties(namespacedMembersGenerator, {
+                    isEncapsulateNamespace: {
+                        value: true
+                    },
+                    namespace: {
+                        value: name
+                    }
+                });
+                return namespacedMembersGenerator;
+            }
+        },
+        property: {
+            value: function (getterOrGetterAndSetter, setter) {
+                return typeof setter == "undefined" ?
+                    {
+                        get: getterOrGetterAndSetter,
+                        set: getterOrGetterAndSetter
+                    } : {
+                        get: getterOrGetterAndSetter,
+                        set: setter
+                    };
+            }
+        },
+        readOnlyProperty: {
+            value: function (getter) {
+                return {
+                    get: getter
+                };
+            }
+        }
+    });
     return encapsulate;
 }));
 
