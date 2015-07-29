@@ -164,6 +164,15 @@
         return instantiator;
     }
 
+    function wrapMembersOrMembersGenerator(membersOrMembersGenerator) {
+        if (typeof membersOrMembersGenerator == "function" && !membersOrMembersGenerator.isEncapsulateInstantiator)
+            return membersOrMembersGenerator;
+        else if (typeof membersOrMembersGenerator == "object") return function () {
+            return clone(membersOrMembersGenerator, true);
+        };
+        throw "Unsupported argument type";
+    }
+
     /**
      *
      * @param membersOrMembersGeneratorOrInstantiator
@@ -188,31 +197,42 @@
 
         if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
             return parentAccumulator;
-        } else return generateInstantiator(map(args, function (argument) {
-            if (typeof argument == "function" && !argument.isEncapsulateInstantiator)
-                return argument;
-            else if (typeof argument == "object") return function () {
-                return clone(argument, true);
-            };
-            throw "Unsupported argument type";
-        }));
+        } else return generateInstantiator(map(args, wrapMembersOrMembersGenerator));
     }
+
+    /**
+     * This can be used to namespace a given membersGenerator function or object.
+     * Alternatively, if called with just the name parameter a partially-applied
+     * version of the function is returned that can be used to namespace multiple
+     * member generators.
+     *
+     * @param {String} name
+     * @param {Function|Object} [membersGenerator]
+     * @returns {Function}
+     */
+     function namespace(name, membersGenerator) {
+        if (typeof membersGenerator == "undefined")
+            return namespace.bind(this, name);
+
+        var wrappedMembersGenerator = wrapMembersOrMembersGenerator(membersGenerator);
+        function namespacedMembersGenerator() {
+            return wrappedMembersGenerator();
+        }
+
+        Object.defineProperties(namespacedMembersGenerator, {
+            isEncapsulateNamespace: {
+                value: true
+            },
+            namespace: {
+                value: name
+            }
+        });
+        return namespacedMembersGenerator;
+    }
+
     Object.defineProperties(encapsulate, {
         namespace: {
-            value: function (name, membersGenerator) {
-                function namespacedMembersGenerator() {
-                    return membersGenerator();
-                }
-                Object.defineProperties(namespacedMembersGenerator, {
-                    isEncapsulateNamespace: {
-                        value: true
-                    },
-                    namespace: {
-                        value: name
-                    }
-                });
-                return namespacedMembersGenerator;
-            }
+            value: namespace
         },
         property: {
             value: function (getterOrGetterAndSetter, setter) {
@@ -234,6 +254,7 @@
             }
         }
     });
+
     return encapsulate;
 }));
 
