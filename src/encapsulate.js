@@ -2,9 +2,10 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(
-            ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map", "lodash/collection/forEach",
-             "lodash/collection/includes", "lodash/collection/reduce", "lodash/collection/reject", "lodash/array/slice",
-             "lodash/array/first", "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
+            ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map",
+             "lodash/collection/forEach", "lodash/collection/includes", "lodash/collection/reduce",
+             "lodash/collection/reject", "lodash/array/slice", "lodash/array/first",
+             "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
             factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
@@ -28,10 +29,12 @@
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
         root.encapsulate = factory(
-            _.clone, _.assign, _.map, _.forEach, _.includes, _.reduce, _.reject, _.slice, _.first, _.rest, _.without, _.flatten
+            _.clone, _.assign, _.map, _.forEach, _.includes, _.reduce, _.reject,
+            _.slice, _.first, _.rest, _.without, _.flatten
         );
     }
-}(this, function (clone, assign, map, forEach, includes, reduce, reject, slice, first, rest, without, flatten) {
+}(this, function (clone, assign, map, forEach, includes, reduce, reject, slice,
+                  first, rest, without, flatten) {
     var instantiatorCount = 0,
         instanceCount = 0;
 
@@ -74,7 +77,11 @@
 
     function linearize(instantiator) {
         if (instantiator.__bases__.length == 0) return [instantiator];
-        return [instantiator].concat(merge.apply(this, map(instantiator.__bases__, linearize).concat([instantiator.__bases__])));
+        return [instantiator].concat(
+            merge.apply(
+                this,
+                map(instantiator.__bases__, linearize)
+                    .concat([instantiator.__bases__])));
     }
 
     /**
@@ -97,7 +104,8 @@
             instantiator = function () {
                 var args = slice(arguments),
                     instance = function () {
-                        //TODO: Handle mixins return a new instance of the object with input mixins applied
+                        //TODO: Handle mixins return a new instance of the object
+                        //TODO: with input mixins applied
                         throw "NotImplemented";
                     };
                 Object.defineProperties(instance, {
@@ -109,14 +117,16 @@
                     },
                     instanceOf: {
                         value: function (target) {
-                            //TODO: Implement instanceOf check to determine of instance is an instance of target or one of its bases
+                            //TODO: Implement instanceOf check to determine of
+                            //TODO: instance is an instance of target or one of its bases
                             throw "NotImplemented";
                         }
                     }
                 });
                 //TODO: Replace naive bind members with inheritance aware form
                 forEach(memberGenerators, bindMembers, instance);
-                if(typeof instance.__init__ == "function") instance.__init__.apply(instance, arguments);
+                if(typeof instance.__init__ == "function")
+                    instance.__init__.apply(instance, arguments);
                 return instance;
         };
 
@@ -141,7 +151,8 @@
                 value: function () {
                     var args = slice(arguments);
                     forEach(args, function (base) {
-                        if (!base.isEncapsulateInstantiator) throw base + " is not an Encapsulate Instantiator";
+                        if (!base.isEncapsulateInstantiator)
+                            throw base + " is not an Encapsulate Instantiator";
                     });
                     return generateInstantiator(memberGenerators, args);
                 }
@@ -172,12 +183,14 @@
             }
         }
 
-        if (typeof membersOrMembersGeneratorOrInstantiator == "undefined") throw "encapsulate requires parameters!";
+        if (typeof membersOrMembersGeneratorOrInstantiator == "undefined")
+            throw "encapsulate requires parameters!";
 
         if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
             return parentAccumulator;
         } else return generateInstantiator(map(args, function (argument) {
-            if (typeof argument == "function" && !argument.isEncapsulateInstantiator) return argument;
+            if (typeof argument == "function" && !argument.isEncapsulateInstantiator)
+                return argument;
             else if (typeof argument == "object") return function () {
                 return clone(argument, true);
             };
