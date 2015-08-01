@@ -38,6 +38,18 @@
     var instantiatorCount = 0,
         instanceCount = 0;
 
+    /*
+     Begin C3 Linearization implementation.
+
+     This version of C3 Linearization is based on the OCaml version implemented
+     at https://xivilization.net/~marek/blog/2014/12/08/implementing-c3-linearization/
+
+     The only difference here is that, similar to the C3 Implementation used in
+     Ring.js (http://ringjs.neoname.eu/), the linearize function will attempt to
+     use a pre-calculated linearization defined on a given item to be linearized
+     in order to allow us to avoid re-calculating the linearization of items
+     that have already been linearized.
+     */
     /**
      *
      * @param {*} value
@@ -84,6 +96,9 @@
                 map(instantiator.__bases__, linearize)
                     .concat([instantiator.__bases__])));
     }
+    /*
+     End C3 Linearization implementation
+     */
 
     /**
      *
