@@ -77,6 +77,7 @@
 
     function linearize(instantiator) {
         if (instantiator.__bases__.length == 0) return [instantiator];
+        else if (instantiator.__mro__) return instantiator.__mro__;
         return [instantiator].concat(
             merge.apply(
                 this,
