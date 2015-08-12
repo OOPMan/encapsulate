@@ -3,7 +3,8 @@
         // AMD. Register as an anonymous module.
         define(
             ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map",
-             "lodash/collection/forEach", "lodash/collection/includes", "lodash/collection/reduce",
+             "lodash/collection/forEach", "lodash/collection/forEachRight",
+             "lodash/collection/includes", "lodash/collection/reduce",
              "lodash/collection/reject", "lodash/array/slice", "lodash/array/first",
              "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
             factory);
@@ -16,6 +17,7 @@
             require("lodash/object/assign"),
             require("lodash/collection/map"),
             require("lodash/collection/forEach"),
+            require("lodash/collection/forEachRight"),
             require("lodash/collection/includes"),
             require("lodash/collection/reduce"),
             require("lodash/collection/reject"),
@@ -29,12 +31,12 @@
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
         root.encapsulate = factory(
-            _.clone, _.assign, _.map, _.forEach, _.includes, _.reduce, _.reject,
-            _.slice, _.first, _.rest, _.without, _.flatten
+            _.clone, _.assign, _.map, _.forEach, _.forEachRight, _.includes,
+            _.reduce, _.reject, _.slice, _.first, _.rest, _.without, _.flatten
         );
     }
-}(this, function (clone, assign, map, forEach, includes, reduce, reject, slice,
-                  first, rest, without, flatten) {
+}(this, function (clone, assign, map, forEach, forEachRight, includes, reduce,
+                  reject, slice, first, rest, without, flatten) {
     var instantiatorCount = 0,
         instanceCount = 0;
 
@@ -89,7 +91,7 @@
 
     function linearize(instantiator) {
         if (instantiator.__bases__.length == 0) return [instantiator];
-        else if (instantiator.__mro__) return instantiator.__mro__;
+        else if (instantiator.__mro__.length > 0) return instantiator.__mro__;
         return [instantiator].concat(
             merge.apply(
                 this,
@@ -102,11 +104,12 @@
 
     /**
      *
-     * @param membersGenerator
+     * @param instantiator
+     * @param instance
      */
-    function bindMembers(membersGenerator) {
-        assign(this, membersGenerator());
-        //TODO: Bind members (including getters & setters)
+    function bindMembers(instantiator, instance) {
+        //assign(this, membersGenerator());
+        ////TODO: Bind members (including getters & setters)
     }
 
     /**
@@ -117,6 +120,7 @@
      */
     function generateInstantiator(memberGenerators, bases) {
         var bases = bases || [],
+            mro = [],
             instantiator = function () {
                 var args = slice(arguments),
                     instance = function () {
@@ -137,8 +141,7 @@
                         }
                     }
                 });
-                //TODO: Replace naive bind members with inheritance aware form
-                forEach(memberGenerators, bindMembers, instance);
+                forEachRight(instantiator.__mro__, bindMembers, instance);
                 if(typeof instance.__init__ == "function")
                     instance.__init__.apply(instance, arguments);
                 return instance;
@@ -158,6 +161,11 @@
                     return slice(memberGenerators);
                 }
             },
+            __mro__: {
+                get: function () {
+                    return slice(mro);
+                }
+            },
             isEncapsulateInstantiator: {
                 value: true
             },
@@ -172,9 +180,7 @@
                 }
             }
         });
-        Object.defineProperty(instantiator, "__mro__", {
-            value: linearize(instantiator)
-        });
+        mro.push.apply(mro, linearize(instantiator));
         return instantiator;
     }
 
