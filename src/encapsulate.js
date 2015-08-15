@@ -3,12 +3,11 @@
         // AMD. Register as an anonymous module.
         define(
             ["lodash/lang/clone", "lodash/lang/isFunction", "lodash/object/assign",
-             "lodash/object/merge", "lodash/object/pick", "lodash/object/omit",
-             "lodash/collection/map", "lodash/collection/forEach",
-             "lodash/collection/forEachRight", "lodash/collection/includes",
-             "lodash/collection/reduce", "lodash/collection/reject",
-             "lodash/array/slice", "lodash/array/first", "lodash/array/rest",
-             "lodash/array/without", "lodash/array/flatten"],
+             "lodash/object/pick", "lodash/object/omit", "lodash/collection/map",
+             "lodash/collection/forEach", "lodash/collection/forEachRight",
+             "lodash/collection/includes", "lodash/collection/reduce",
+             "lodash/collection/reject", "lodash/array/slice", "lodash/array/first",
+             "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
             factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
@@ -18,7 +17,6 @@
             require("lodash/lang/clone"),
             require("lodash/lang/isFunction"),
             require("lodash/object/assign"),
-            require("lodash/object/merge"),
             require("lodash/object/pick"),
             require("lodash/object/omit"),
             require("lodash/collection/map"),
@@ -37,14 +35,13 @@
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
         root.encapsulate = factory(
-            _.clone, _.isFunction, _.assign, _.merge, _.pick, _.omit, _.map,
-            _.forEach, _.forEachRight, _.includes, _.reduce, _.reject, _.slice,
-            _.first, _.rest, _.without, _.flatten
+            _.clone, _.isFunction, _.assign, _.pick, _.omit, _.map, _.forEach,
+            _.forEachRight, _.includes, _.reduce, _.reject, _.slice, _.first,
+            _.rest, _.without, _.flatten
         );
     }
-}(this, function (clone, isFunction, merge, assign, pick, omit, map, forEach,
-                  forEachRight, includes, reduce, reject, slice, first, rest,
-                  without, flatten) {
+}(this, function (clone, isFunction, assign, pick, omit, map, forEach, forEachRight,
+                  includes, reduce, reject, slice, first, rest, without, flatten) {
     var instantiatorCount = 0,
         instanceCount = 0;
 
