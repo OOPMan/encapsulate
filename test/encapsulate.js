@@ -18,6 +18,16 @@ describe("encapsulate", function () {
         });
     });
 
+    describe("encapsulate(function () { return {}; })", function () {
+        var instantiator = encapsulate(function () { return {}; });
+        it("should produce a function", function () {
+            test.function(instantiator);
+        });
+        it("with the property `isEncapsulateInstantiator` having the value `true`", function () {
+            test.bool(instantiator.isEncapsulateInstantiator).isTrue();
+        });
+    });
+
     describe("encapsulate", function () {
         it("should pass the C3 Linearization test", function () {
             var O =  encapsulate({}),
@@ -34,4 +44,44 @@ describe("encapsulate", function () {
         });
     });
 
+    describe(
+        "var A = encapsulate({" +
+        " x: 0," +
+        " y: function () {" +
+        " return this.x;" +
+        " }" +
+        "})",
+        function () {
+            var A = encapsulate({
+                        x: 0,
+                        y: function () {
+                            return this.x;
+                        }
+                    });
+            it("should produce a function", function () {
+                test.function(A);
+            });
+            it("with the property `isEncapsulateInstantiator` having the value `true`", function () {
+                test.bool(A.isEncapsulateInstantiator).isTrue();
+            });
+            describe("var a = A()", function () {
+                var a = A();
+                it("should produce an instance of A", function () {
+                    test.bool(a.instanceOf(A)).isTrue();
+                });
+                describe("a.x", function () {
+                    it("should equal 0", function () {
+                        test.number(a.x).isIdenticalTo(0);
+                    })
+                });
+                describe("a.y", function () {
+                    it("is a function", function () {
+                        test.function(a.y);
+                    });
+                    it("should return 0 when called", function () {
+                        test.number(a.y()).isIdenticalTo(0);
+                    });
+                });
+            });
+    });
 });
