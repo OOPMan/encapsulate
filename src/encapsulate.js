@@ -2,11 +2,13 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(
-            ["lodash/lang/clone", "lodash/object/assign", "lodash/collection/map",
-             "lodash/collection/forEach", "lodash/collection/forEachRight",
-             "lodash/collection/includes", "lodash/collection/reduce",
-             "lodash/collection/reject", "lodash/array/slice", "lodash/array/first",
-             "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
+            ["lodash/lang/clone", "lodash/lang/isFunction", "lodash/object/assign",
+             "lodash/object/merge", "lodash/object/pick", "lodash/object/omit",
+             "lodash/collection/map", "lodash/collection/forEach",
+             "lodash/collection/forEachRight", "lodash/collection/includes",
+             "lodash/collection/reduce", "lodash/collection/reject",
+             "lodash/array/slice", "lodash/array/first", "lodash/array/rest",
+             "lodash/array/without", "lodash/array/flatten"],
             factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
@@ -14,7 +16,11 @@
         // like Node.
         module.exports = factory(
             require("lodash/lang/clone"),
+            require("lodash/lang/isFunction"),
             require("lodash/object/assign"),
+            require("lodash/object/merge"),
+            require("lodash/object/pick"),
+            require("lodash/object/omit"),
             require("lodash/collection/map"),
             require("lodash/collection/forEach"),
             require("lodash/collection/forEachRight"),
@@ -31,12 +37,14 @@
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
         root.encapsulate = factory(
-            _.clone, _.assign, _.map, _.forEach, _.forEachRight, _.includes,
-            _.reduce, _.reject, _.slice, _.first, _.rest, _.without, _.flatten
+            _.clone, _.isFunction, _.assign, _.merge, _.pick, _.omit, _.map,
+            _.forEach, _.forEachRight, _.includes, _.reduce, _.reject, _.slice,
+            _.first, _.rest, _.without, _.flatten
         );
     }
-}(this, function (clone, assign, map, forEach, forEachRight, includes, reduce,
-                  reject, slice, first, rest, without, flatten) {
+}(this, function (clone, isFunction, merge, assign, pick, omit, map, forEach,
+                  forEachRight, includes, reduce, reject, slice, first, rest,
+                  without, flatten) {
     var instantiatorCount = 0,
         instanceCount = 0;
 
@@ -78,13 +86,13 @@
         }, null);
     }
 
-    function merge() {
+    function mergeLinearizations() {
         var args = slice(arguments),
             head = headNotInTails.apply(this, args),
             filteredArgs = head ? remove(head, args) : null;
         if (head) {
             if (filteredArgs.length == 0) return [head];
-            return [head].concat(merge.apply(this, filteredArgs));
+            return [head].concat(mergeLinearizations.apply(this, filteredArgs));
         }
         throw "No linearization possible";
     }
@@ -93,7 +101,7 @@
         if (instantiator.__bases__.length == 0) return [instantiator];
         else if (instantiator.__mro__.length > 0) return instantiator.__mro__;
         return [instantiator].concat(
-            merge.apply(
+            mergeLinearizations.apply(
                 this,
                 map(instantiator.__bases__, linearize)
                     .concat([instantiator.__bases__])));
@@ -103,13 +111,14 @@
      */
 
     /**
+     * Given an input instantiator function, performs generation of members
+     * associated with the instantiator. The collected generated members are
+     * then assigned to the this context the bindMembers function was called
+     * with. Finally, property definition is handled.
      *
-     * @param instantiator
-     * @param instance
+     * @param {Function} instantiator
      */
-    function bindMembers(instantiator, instance) {
-        //assign(this, membersGenerator());
-        ////TODO: Bind members (including getters & setters)
+    function bindMembers(instantiator) {
     }
 
     /**
@@ -143,7 +152,7 @@
                 });
                 forEachRight(instantiator.__mro__, bindMembers, instance);
                 if(typeof instance.__init__ == "function")
-                    instance.__init__.apply(instance, arguments);
+                    instance.__init__.apply(instance, args);
                 return instance;
         };
 
@@ -220,40 +229,7 @@
         } else return generateInstantiator(map(args, wrapMembersOrMembersGenerator));
     }
 
-    /**
-     * This can be used to namespace a given membersGenerator function or object.
-     * Alternatively, if called with just the name parameter a partially-applied
-     * version of the function is returned that can be used to namespace multiple
-     * member generators.
-     *
-     * @param {String} name
-     * @param {Function|Object} [membersGenerator]
-     * @returns {Function}
-     */
-     function namespace(name, membersGenerator) {
-        if (typeof membersGenerator == "undefined")
-            return namespace.bind(this, name);
-
-        var wrappedMembersGenerator = wrapMembersOrMembersGenerator(membersGenerator);
-        function namespacedMembersGenerator() {
-            return wrappedMembersGenerator();
-        }
-
-        Object.defineProperties(namespacedMembersGenerator, {
-            isEncapsulateNamespace: {
-                value: true
-            },
-            namespace: {
-                value: name
-            }
-        });
-        return namespacedMembersGenerator;
-    }
-
     Object.defineProperties(encapsulate, {
-        namespace: {
-            value: namespace
-        },
         property: {
             value: function (getterOrGetterAndSetter, setter) {
                 return typeof setter == "undefined" ?
