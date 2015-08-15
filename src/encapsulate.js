@@ -122,8 +122,7 @@
             instantiator = function () {
                 var args = slice(arguments),
                     instance = function () {
-                        //TODO: Handle mixins return a new instance of the object
-                        //TODO: with input mixins applied
+                        if (isFunction(instance.__call__)) return instance.__call__.apply(instance, arguments);
                         throw "NotImplemented";
                     };
                 Object.defineProperties(instance, {
@@ -156,7 +155,6 @@
                         }
                         instance[functionName] = functionMember;
                     });
-
                 });
                 // Call constructor
                 if(typeof instance.__init__ == "function")
