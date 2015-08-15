@@ -111,17 +111,6 @@
      */
 
     /**
-     * Given an input instantiator function, performs generation of members
-     * associated with the instantiator. The collected generated members are
-     * then assigned to the this context the bindMembers function was called
-     * with. Finally, property definition is handled.
-     *
-     * @param {Function} instantiator
-     */
-    function bindMembers(instantiator) {
-    }
-
-    /**
      *
      * @param {Array} memberGenerators
      * @param {Array} [bases=[]]
@@ -150,7 +139,26 @@
                         }
                     }
                 });
-                forEachRight(instantiator.__mro__, bindMembers, instance);
+                // Bind Members
+                forEachRight(instantiator.__mro__, function (instantiator) {
+                    var members = reduce(
+                            instantiator.__members__,
+                            function (members, membersGenerator) {
+                                return assign(members, membersGenerator());
+                            },
+                            {}),
+                        functionMembers = pick(members, isFunction),
+                        nonFunctionMembers = omit(members, isFunction);
+                    assign(instance, nonFunctionMembers);
+                    forEach(functionMembers, function (functionMember, functionName) {
+                        if (isFunction(instance[functionName])) {
+                            functionMember.super = instance[functionName].bind(instance);
+                        }
+                        instance[functionName] = functionMember;
+                    });
+
+                });
+                // Call constructor
                 if(typeof instance.__init__ == "function")
                     instance.__init__.apply(instance, args);
                 return instance;
