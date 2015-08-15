@@ -229,28 +229,6 @@
         } else return generateInstantiator(map(args, wrapMembersOrMembersGenerator));
     }
 
-    Object.defineProperties(encapsulate, {
-        property: {
-            value: function (getterOrGetterAndSetter, setter) {
-                return typeof setter == "undefined" ?
-                    {
-                        get: getterOrGetterAndSetter,
-                        set: getterOrGetterAndSetter
-                    } : {
-                        get: getterOrGetterAndSetter,
-                        set: setter
-                    };
-            }
-        },
-        readOnlyProperty: {
-            value: function (getter) {
-                return {
-                    get: getter
-                };
-            }
-        }
-    });
-
     return encapsulate;
 }));
 
