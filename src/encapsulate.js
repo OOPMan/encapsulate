@@ -2,11 +2,11 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(
-            ["lodash/lang/clone", "lodash/lang/isFunction", "lodash/object/assign",
+            ["lodash/lang/clone", "lodash/lang/isFunction", "lodash/lang/isPlainObject", "lodash/object/assign",
              "lodash/object/pick", "lodash/object/omit", "lodash/collection/map",
              "lodash/collection/forEach", "lodash/collection/forEachRight",
              "lodash/collection/includes", "lodash/collection/reduce",
-             "lodash/collection/reject", "lodash/array/slice", "lodash/array/first",
+             "lodash/collection/reject", "lodash/collection/some", "lodash/array/slice", "lodash/array/first",
              "lodash/array/rest", "lodash/array/without", "lodash/array/flatten"],
             factory);
     } else if (typeof exports === 'object') {
@@ -16,6 +16,7 @@
         module.exports = factory(
             require("lodash/lang/clone"),
             require("lodash/lang/isFunction"),
+            require("lodash/lang/isPlainObject"),
             require("lodash/object/assign"),
             require("lodash/object/pick"),
             require("lodash/object/omit"),
@@ -25,6 +26,7 @@
             require("lodash/collection/includes"),
             require("lodash/collection/reduce"),
             require("lodash/collection/reject"),
+            require("lodash/collection/some"),
             require("lodash/array/slice"),
             require("lodash/array/first"),
             require("lodash/array/rest"),
@@ -35,13 +37,13 @@
         // Browser globals (root is window)
         if (typeof _ == "undefined") throw "_ not defined in global namespace";
         root.encapsulate = factory(
-            _.clone, _.isFunction, _.assign, _.pick, _.omit, _.map, _.forEach,
-            _.forEachRight, _.includes, _.reduce, _.reject, _.slice, _.first,
+            _.clone, _.isFunction, _.isPlainObject, _.assign, _.pick, _.omit, _.map, _.forEach,
+            _.forEachRight, _.includes, _.reduce, _.reject, _.some, _.slice, _.first,
             _.rest, _.without, _.flatten
         );
     }
-}(this, function (clone, isFunction, assign, pick, omit, map, forEach, forEachRight,
-                  includes, reduce, reject, slice, first, rest, without, flatten) {
+}(this, function (clone, isFunction, isPlainObject, assign, pick, omit, map, forEach, forEachRight,
+                  includes, reduce, reject, some, slice, first, rest, without, flatten) {
     var instantiatorCount = 0,
         instanceCount = 0;
 
@@ -109,11 +111,11 @@
 
     /**
      *
-     * @param {Array} memberGenerators
+     * @param {Array} traits
      * @param {Array} [bases=[]]
      * @returns {Function}
      */
-    function generateInstantiator(memberGenerators, bases) {
+    function generateInstantiator(traits, bases) {
         var bases = bases || [],
             mro = [],
             instantiator = function () {
@@ -130,17 +132,23 @@
                         value: true
                     },
                     instanceOf: {
-                        value: function (target) {
-                            return includes(instantiator.__mro__, target);
+                        value: function (traitOrInstantiator) {
+                            if (traitOrInstantiator.isEncapsulateInstantiator) return includes(instantiator.__mro__, traitOrInstantiator);
+                            else if (isFunction(traitOrInstantiator) || isPlainObject(isPlainObject)) {
+                                //TODO: Implement instanceOf checking for Traits
+                            }
+                            throw "Unsupported argument type. Argument must be a Plain Object, Function or Encapsulate Instantiator";
                         }
                     }
                 });
                 // Bind Members
                 forEachRight(instantiator.__mro__, function (instantiator) {
                     var members = reduce(
-                            instantiator.__members__,
-                            function (members, membersGenerator) {
-                                return assign(members, membersGenerator());
+                            instantiator.__traits__,
+                            function (members, trait) {
+                                if (isFunction(trait)) return assign(members, trait.apply(instance, args));
+                                if (isPlainObject(trait)) return assign(members, clone(trait, true));
+                                throw "Traits must be either Plain Objects or Functions";
                             },
                             {}),
                         functionMembers = pick(members, isFunction),
@@ -168,9 +176,9 @@
                     return slice(bases);
                 }
             },
-            __members__: {
+            __traits__: {
                 get: function () {
-                    return slice(memberGenerators);
+                    return slice(traits);
                 }
             },
             __mro__: {
@@ -184,11 +192,10 @@
             extends: {
                 value: function () {
                     var args = slice(arguments);
-                    forEach(args, function (base) {
-                        if (!base.isEncapsulateInstantiator)
-                            throw base + " is not an Encapsulate Instantiator";
-                    });
-                    return generateInstantiator(memberGenerators, args);
+                    if (some(args, function (arg) { return !arg.isEncapsulateInstantiator; })) {
+                        throw "Unsupported argument type. Arguments must be Encapsulate Instantiator";
+                    }
+                    return generateInstantiator(traits, args);
                 }
             }
         });
@@ -196,27 +203,19 @@
         return instantiator;
     }
 
-    function wrapMembersOrMembersGenerator(membersOrMembersGenerator) {
-        if (typeof membersOrMembersGenerator == "function" && !membersOrMembersGenerator.isEncapsulateInstantiator)
-            return membersOrMembersGenerator;
-        else if (typeof membersOrMembersGenerator == "object") return function () {
-            return clone(membersOrMembersGenerator, true);
-        };
-        throw "Unsupported argument type";
-    }
-
     /**
      *
-     * @param membersOrMembersGeneratorOrInstantiator
+     * @param {Object|Function} traitOrInstantiator
      * @returns {Function}
      */
-    function encapsulate(membersOrMembersGeneratorOrInstantiator) {
+    function encapsulate(traitOrInstantiator) {
         var args = slice(arguments);
 
-        function parentAccumulator(membersOrMembersGeneratorOrInstantiator) {
+        function parentAccumulator(traitOrInstantiator) {
             var arguments = slice(arguments);
-            if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
+            if (traitOrInstantiator.isEncapsulateInstantiator) {
                 args.push.apply(args, arguments);
+                //TODO: This needs to return a new parentAccumulator in order to make this a non-mutating operation
                 return parentAccumulator;
             } else {
                 var instantiator = encapsulate.apply(this, arguments);
@@ -224,12 +223,15 @@
             }
         }
 
-        if (typeof membersOrMembersGeneratorOrInstantiator == "undefined")
+        if (typeof traitOrInstantiator == "undefined")
             throw "encapsulate requires parameters!";
+        else if (some(args, function (arg) { return !isFunction(arg) && !isPlainObject(arg); })) {
+            throw "Unsupported argument type. Arguments must be either Plain Objects or Functions";
+        }
 
-        if (membersOrMembersGeneratorOrInstantiator.isEncapsulateInstantiator) {
+        if (traitOrInstantiator.isEncapsulateInstantiator) {
             return parentAccumulator;
-        } else return generateInstantiator(map(args, wrapMembersOrMembersGenerator));
+        } else return generateInstantiator(args);
     }
 
     return encapsulate;
