@@ -135,7 +135,11 @@
                         value: function (traitOrInstantiator) {
                             if (traitOrInstantiator.isEncapsulateInstantiator) return includes(instantiator.__mro__, traitOrInstantiator);
                             else if (isFunction(traitOrInstantiator) || isPlainObject(isPlainObject)) {
-                                //TODO: Implement instanceOf checking for Traits
+                                return includes(
+                                    flatten(map(instantiator.__bases__, function (base) {
+                                        return base.__traits__;
+                                    })),
+                                    traitOrInstantiator);
                             }
                             throw "Unsupported argument type. Argument must be a Plain Object, Function or Encapsulate Instantiator";
                         }
