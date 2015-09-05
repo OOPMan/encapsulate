@@ -40,7 +40,7 @@ function remove(value, lists) {
 
 function headNotInTails(...listOfLists) {
     const heads = map(listOfLists, first),
-          tails = map(listOfLists, rest);
+          tails = flatten(map(listOfLists, rest));
     return reduce(
         heads,
         (selectedHead, head) => {
