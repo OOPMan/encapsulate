@@ -52,8 +52,8 @@ function headNotInTails(...listOfLists) {
     );
 }
 
-function mergeLinearizations(...args) {
-    const args = slice(args),
+function mergeLinearizations(...linearizations) {
+    const args = slice(linearizations),
           head = headNotInTails(...args),
           filteredArgs = head ? remove(head, args) : null;
     if (head) {
@@ -121,7 +121,7 @@ function generateInstantiator(traits, bases = []) {
                 });
             });
             // Call constructor
-            if(typeof instance.__init__ == "function") instance.__init__.(...args);
+            if(typeof instance.__init__ == "function") instance.__init__(...args);
             return instance;
         };
 
@@ -154,13 +154,13 @@ export default function encapsulate(traitOrInstantiator) {
     var args = slice(arguments);
 
     function parentAccumulator(traitOrInstantiator) {
-        var arguments = slice(arguments);
+        var accumulatorArgs = slice(arguments);
         if (traitOrInstantiator.isEncapsulateInstantiator) {
-            args.push(...arguments);
+            args.push(...accumulatorArgs);
             //TODO: This needs to return a new parentAccumulator in order to make this a non-mutating operation
             return parentAccumulator;
         } else {
-            let instantiator = encapsulate(...arguments);
+            let instantiator = encapsulate(...accumulatorArgs);
             return instantiator.extends(...args);
         }
     }
