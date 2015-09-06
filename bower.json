@@ -6,7 +6,7 @@
     "Adam Jorgensen <adam.jorgensen.za@gmail.com>"
   ],
   "description": "A JavaScript class system",
-  "main": "src/encapsulate.js",
+  "main": "dist/encapsulate.js",
   "moduleType": [
     "amd",
     "globals",
