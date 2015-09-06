@@ -105,7 +105,7 @@ function generateInstantiator(traits, bases = []) {
                 var members = reduce(
                         instantiator.__traits__,
                         (members, trait) => {
-                            if (isFunction(trait)) return assign(members, trait.apply(instance, args));
+                            if (isFunction(trait)) return assign(members, trait(instance, ...args));
                             if (isPlainObject(trait)) return assign(members, clone(trait, true));
                             throw 'Traits must be either Plain Objects or Functions';
                         },
