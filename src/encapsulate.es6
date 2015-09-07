@@ -75,7 +75,8 @@ End C3 Linearization implementation
 
 /**
  *
- * @param {Object|Function} traitOrInstantiator
+ * @param {Array} traits
+ * @param {Array} [bases=[]]
  * @returns {Function}
  */
 function generateInstantiator(traits, bases = []) {
