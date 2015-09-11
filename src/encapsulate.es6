@@ -3,6 +3,7 @@ import first from 'lodash/array/first';
 import rest from 'lodash/array/rest';
 import without from 'lodash/array/without';
 import flatten from 'lodash/array/flatten';
+import every from 'lodash/collection/every';
 import map from 'lodash/collection/map';
 import forEach from 'lodash/collection/forEach';
 import forEachRight from 'lodash/collection/forEachRight';
@@ -147,31 +148,51 @@ function generateInstantiator(traits, bases = []) {
 }
 
 /**
+ * Returns true if the input parameters constitute a valid accumulation,
+ * false if the input parameter constitutes a valid generate.
  *
- * @param {Object|Function} traitOrInstantiator
+ * Throws an exception if neither option is valid.
+ *
+ * @param {Array} traitsOrInstantiators
+ * @returns {boolean}
+ */
+function accumulateOrGenerate(traitsOrInstantiators) {
+    if (!traitsOrInstantiators.length) throw 'Encapsulate requires parameters!';
+    else if (some(traitsOrInstantiators, arg => !isFunction(arg) && !isPlainObject(arg))) {
+        throw 'Unsupported argument type. Arguments must be either Plain Objects or Functions';
+    }
+
+    if (some(traitsOrInstantiators, arg => isFunction(arg) && arg.isEncapsulateInstantiator)) {
+        if (every(traitsOrInstantiators, arg => isFunction(arg) && arg.isEncapsulateInstantiator)) return true;
+        throw 'If one argument is an Encapsulate Instantiator then all arguments must be an Encapsulate Instantiator';
+    }
+    return false;
+}
+
+/**
+ *
+ * @param {Array} seedTraitsOrInstantiators
+ * @returns {accumulator}
+ */
+function generateAccumulator(seedTraitsOrInstantiators) {
+    /**
+     *
+     * @param {Array} traitsOrInstantiators
+     * @returns {Function}
+     */
+    function accumulator(...traitsOrInstantiators) {
+        if (accumulateOrGenerate(traitsOrInstantiators)) return generateAccumulator([...seedTraitsOrInstantiators, ...traitsOrInstantiators]);
+        return generateInstantiator(traitsOrInstantiators, seedTraitsOrInstantiators);
+    }
+    return accumulator;
+}
+
+/**
+ *
+ * @param {Array} traitsOrInstantiators
  * @returns {Function}
  */
-export default function encapsulate(traitOrInstantiator) {
-    var args = slice(arguments);
-
-    function parentAccumulator(traitOrInstantiator) {
-        var accumulatorArgs = slice(arguments);
-        if (traitOrInstantiator.isEncapsulateInstantiator) {
-            args.push(...accumulatorArgs);
-            //TODO: This needs to return a new parentAccumulator in order to make this a non-mutating operation
-            return parentAccumulator;
-        } else {
-            let instantiator = encapsulate(...accumulatorArgs);
-            return instantiator.extends(...args);
-        }
-    }
-
-    if (typeof traitOrInstantiator == "undefined")
-        throw "encapsulate requires parameters!";
-    else if (some(args, arg => !isFunction(arg) && !isPlainObject(arg))) {
-        throw "Unsupported argument type. Arguments must be either Plain Objects or Functions";
-    }
-
-    if (traitOrInstantiator.isEncapsulateInstantiator) return parentAccumulator;
-    return generateInstantiator(args);
+export default function encapsulate(...traitsOrInstantiators) {
+    if (accumulateOrGenerate(traitsOrInstantiators)) return generateAccumulator(traitsOrInstantiators);
+    return generateInstantiator(traitsOrInstantiators);
 }
