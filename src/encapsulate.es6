@@ -76,8 +76,8 @@ End C3 Linearization implementation
 
 /**
  *
- * @param {Array} traits
- * @param {Array} [bases=[]]
+ * @param {(Function|Object)[]} traits
+ * @param {Function[]} [bases=[]]
  * @returns {Function}
  */
 function generateInstantiator(traits, bases = []) {
@@ -135,7 +135,6 @@ function generateInstantiator(traits, bases = []) {
             isEncapsulateInstantiator: { value: true },
             extends: {
                 value: (...args) => {
-                    var args = slice(args);
                     if (some(args, arg => !arg.isEncapsulateInstantiator)) {
                         throw 'Unsupported argument type. Arguments must be Encapsulate Instantiator';
                     }
@@ -153,7 +152,7 @@ function generateInstantiator(traits, bases = []) {
  *
  * Throws an exception if neither option is valid.
  *
- * @param {Array} traitsOrInstantiators
+ * @param {(Function|Object)[]} traitsOrInstantiators
  * @returns {boolean}
  */
 function accumulateOrGenerate(traitsOrInstantiators) {
@@ -171,13 +170,13 @@ function accumulateOrGenerate(traitsOrInstantiators) {
 
 /**
  *
- * @param {Array} seedTraitsOrInstantiators
+ * @param {...(Function|Object)} seedTraitsOrInstantiators
  * @returns {accumulator}
  */
 function generateAccumulator(seedTraitsOrInstantiators) {
     /**
      *
-     * @param {Array} traitsOrInstantiators
+     * @param {...(Function|Object)} traitsOrInstantiators
      * @returns {Function}
      */
     function accumulator(...traitsOrInstantiators) {
@@ -189,7 +188,7 @@ function generateAccumulator(seedTraitsOrInstantiators) {
 
 /**
  *
- * @param {Array} traitsOrInstantiators
+ * @param {...(Function|Object)} traitsOrInstantiators
  * @returns {Function}
  */
 export default function encapsulate(...traitsOrInstantiators) {
