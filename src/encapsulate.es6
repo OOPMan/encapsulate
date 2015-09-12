@@ -54,12 +54,11 @@ function headNotInTails(...listOfLists) {
 }
 
 function mergeLinearizations(...linearizations) {
-    const args = slice(linearizations),
-          head = headNotInTails(...args),
-          filteredArgs = head ? remove(head, args) : null;
+    const head = headNotInTails(...linearizations),
+          filteredLinearizations = head ? remove(head, linearizations) : null;
     if (head) {
-        if (filteredArgs.length === 0) return [head];
-        return [head, ...mergeLinearizations(...filteredArgs)];
+        if (filteredLinearizations.length === 0) return [head];
+        return [head, ...mergeLinearizations(...filteredLinearizations)];
     }
     throw 'No Linearization possible';
 }
