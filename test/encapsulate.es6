@@ -3,7 +3,114 @@ import test from 'unit.js';
 var assert = test.assert;
 
 describe("encapsulate", () => {
-    it("should be a function", () => { test.function(encapsulate) });
+    it("C3 Linearization test", () => {
+        const O =  encapsulate({}),
+              A =  encapsulate(O)({}),
+              B =  encapsulate(O)({}),
+              C =  encapsulate(O)({}),
+              D =  encapsulate(O)({}),
+              E =  encapsulate(O)({}),
+              K1 = encapsulate(A, B, C)({}),
+              K2 = encapsulate(D, B, E)({}),
+              K3 = encapsulate(D, A)({}),
+              Z =  encapsulate(K1, K2, K3)({});
+        test.array(Z.__mro__).is([Z, K1, K2, K3, D, A, B, C, E, O]);
+    });
+
+    describe("Basic tests", () => {
+
+        it("Object trait", () => {
+            const trait = {
+                      prop: 1
+                  },
+                  instantiator = encapsulate(trait),
+                  instance = instantiator();
+            test.function(instantiator)
+                .bool(instantiator.isEncapsulateInstantiator).isTrue()
+                .function(instance)
+                .bool(instance.isEncapsulateInstance).isTrue()
+                .number(instance.prop).is(1);
+        });
+
+        it("Function trait", () => {
+            const trait = () => { return {
+                      prop: 1 };
+                  },
+                  instantiator = encapsulate(trait),
+                  instance = instantiator();
+            test.function(instantiator)
+                .bool(instantiator.isEncapsulateInstantiator).isTrue()
+                .function(instance)
+                .bool(instance.isEncapsulateInstance).isTrue()
+                .number(instance.prop).is(1);
+        });
+
+        it("Multiple object traits", () => {
+            const traitA = {
+                      propertyA: 1,
+                      methodA: function () {
+                          return this.propertyA;
+                      },
+                      methodZ: function () {
+                          return "A";
+                      }
+                  },
+                  traitB = {
+                      propertyB: 2,
+                      methodB: function () {
+                          return this.propertyB;
+                      },
+                      methodZ: function () {
+                          return "B";
+                      }
+                  },
+                  instantiator = encapsulate(traitA, traitB),
+                  instance = instantiator();
+            test.number(instance.propertyA).is(1)
+                .function(instance.methodA)
+                .number(instance.methodA()).is(1)
+                .number(instance.propertyB).is(2)
+                .function(instance.methodB)
+                .number(instance.methodB()).is(2)
+                .function(instance.methodZ)
+                .string(instance.methodZ()).is("B");
+        });
+
+        it("Multiple function traits", () => {
+            const traitA = function () {
+                    return {
+                        propertyA: 1,
+                        methodA: function () {
+                            return this.propertyA;
+                        },
+                        methodZ: function () {
+                            return "A";
+                        }
+                    };
+                },
+                traitB = function () {
+                    return {
+                        propertyB: 2,
+                        methodB: function () {
+                            return this.propertyB;
+                        },
+                        methodZ: function () {
+                            return "B";
+                        }
+                    };
+                  },
+                  instantiator = encapsulate(traitA, traitB),
+                  instance = instantiator();
+            test.number(instance.propertyA).is(1)
+                .function(instance.methodA)
+                .number(instance.methodA()).is(1)
+                .number(instance.propertyB).is(2)
+                .function(instance.methodB)
+                .number(instance.methodB()).is(2)
+                .function(instance.methodZ)
+                .string(instance.methodZ()).is("B");
+        });
+    });
 
     describe("encapsulate({})", () => {
         var instantiator = encapsulate({});
@@ -21,21 +128,6 @@ describe("encapsulate", () => {
             () => { test.bool(instantiator.isEncapsulateInstantiator).isTrue() });
     });
 
-    describe("encapsulate", () => {
-        it("should pass the C3 Linearization test", () => {
-            const O =  encapsulate({}),
-                  A =  encapsulate(O)({}),
-                  B =  encapsulate(O)({}),
-                  C =  encapsulate(O)({}),
-                  D =  encapsulate(O)({}),
-                  E =  encapsulate(O)({}),
-                  K1 = encapsulate(A, B, C)({}),
-                  K2 = encapsulate(D, B, E)({}),
-                  K3 = encapsulate(D, A)({}),
-                  Z =  encapsulate(K1, K2, K3)({});
-            test.array(Z.__mro__).is([Z, K1, K2, K3, D, A, B, C, E, O]);
-        });
-    });
 
     describe(
         "var A = encapsulate({" +
