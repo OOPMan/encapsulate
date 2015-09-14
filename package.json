@@ -1,16 +1,17 @@
 {
   "name": "encapsulate",
-  "version": "0.0.1",
-  "description": "A JavaScript class system",
+  "version": "0.1.0",
+  "description": "A JavaScript OO system",
   "main": "dist/encapsulate.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "babel-node ./node_modules/mocha/bin/mocha"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/OOPMan/encapsulate.git"
   },
   "keywords": [
+    "object orientation",
     "classes",
     "utility"
   ],

@@ -1,11 +1,11 @@
 {
   "name": "encapsulate",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "homepage": "https://github.com/OOPMan/encapsulate",
   "authors": [
     "Adam Jorgensen <adam.jorgensen.za@gmail.com>"
   ],
-  "description": "A JavaScript class system",
+  "description": "A JavaScript OO system",
   "main": "dist/encapsulate.js",
   "moduleType": [
     "amd",
