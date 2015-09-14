@@ -112,6 +112,64 @@ describe("encapsulate", () => {
         });
     });
 
+    describe("Inheritance tests", () => {
+        it("Object trait inheritance", () => {
+            const instantiatorA = encapsulate({
+                      propertyA: 1,
+                      methodA: function () {
+                          return this.propertyA;
+                      },
+                      methodZ: function () {
+                          return "A";
+                      }
+                  }),
+                  instantiatorB = encapsulate(instantiatorA)({
+                      propertyB: 2,
+                      methodB: function () {
+                          return this.propertyB;
+                      },
+                      methodZ: function self() {
+                          return "B" + self.super();
+                      }
+                  }),
+                  instantiatorC = encapsulate(instantiatorB)({
+                      propertyC: 3,
+                      methodC: function () {
+                          return this.propertyC;
+                      },
+                      methodZ: function self() {
+                          return self.super() + "C";
+                      }
+                  }),
+                  instanceA = instantiatorA(),
+                  instanceB = instantiatorB(),
+                  instanceC = instantiatorC();
+            test.bool(instanceA.instanceOf(instantiatorA)).isTrue()
+                .number(instanceA.propertyA).is(1)
+                .number(instanceA.methodA()).is(1)
+                .string(instanceA.methodZ()).is("A");
+
+            test.bool(instanceB.instanceOf(instantiatorB)).isTrue()
+                .bool(instanceB.instanceOf(instantiatorA)).isTrue()
+                .number(instanceB.propertyA).is(1)
+                .number(instanceB.propertyB).is(2)
+                .number(instanceB.methodA()).is(1)
+                .number(instanceB.methodB()).is(2)
+                .string(instanceB.methodZ()).is("BA");
+
+            test.bool(instanceC.instanceOf(instantiatorC)).isTrue()
+                .bool(instanceC.instanceOf(instantiatorB)).isTrue()
+                .bool(instanceC.instanceOf(instantiatorA)).isTrue()
+                .number(instanceC.propertyA).is(1)
+                .number(instanceC.propertyB).is(2)
+                .number(instanceC.propertyC).is(3)
+                .number(instanceC.methodA()).is(1)
+                .number(instanceC.methodB()).is(2)
+                .number(instanceC.methodC()).is(3)
+                .string(instanceC.methodZ()).is("BAC");
+        });
+    });
+
     describe("encapsulate({})", () => {
         var instantiator = encapsulate({});
         it("should produce a function",
